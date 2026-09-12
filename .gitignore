@@ -1,0 +1,19 @@
+# Environments
+.venv/
+.env
+
+# Python
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# MLflow
+mlruns/
+mlartifacts/
+
+# Model artifacts
+models/*.pkl
+models/*.joblib
+
+# OS
+.DS_Store
