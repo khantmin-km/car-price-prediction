@@ -11,9 +11,7 @@ __pycache__/
 mlruns/
 mlartifacts/
 
-# Model artifacts
-models/*.pkl
-models/*.joblib
+notebooks/A2_car_price_prediction.ipynb
 
 # OS
 .DS_Store

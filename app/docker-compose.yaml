@@ -1,0 +1,24 @@
+# Local development and verification. The deployment compose file (Traefik
+# labels, no published ports) is separate — see the server setup for Phase 11.
+services:
+  dash:
+    build:
+      # The build context is the repository root, not this folder: the image
+      # needs pyproject.toml, uv.lock and src/, which live one level up.
+      context: ..
+      dockerfile: app/.Dockerfile
+    image: car-price-prediction:dev
+    ports:
+      - "8050:8050"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8050
+      # Matches the deployed configuration, so what is verified here is what
+      # ships. Set DEBUG to true for hot reloading while editing.
+      DEBUG: "false"
+      DEMO_MODE: "false"
+    volumes:
+      # Source is mounted so edits take effect on `docker compose restart dash`
+      # without rebuilding the image.
+      - ./code:/app/code
+    restart: unless-stopped

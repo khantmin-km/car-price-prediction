@@ -1,0 +1,28 @@
+# Built for the host platform; the image creates its own with `uv sync`.
+.venv/
+
+# Git history, editor and OS metadata
+.git/
+.gitignore
+.DS_Store
+.idea/
+.vscode/
+
+# Training inputs and experiment output
+data/
+notebooks/
+mlruns/
+mlartifacts/
+
+# Compiled for the host interpreter; regenerated in the image
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# Supplied at run time via env_file
+.env
+
+# Not needed inside the image
+Dockerfile
+.dockerignore
+docker-compose*.yaml
