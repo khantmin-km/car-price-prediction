@@ -13,6 +13,7 @@ data/
 notebooks/
 mlruns/
 mlartifacts/
+mlflow.db
 
 # Compiled for the host interpreter; regenerated in the image
 __pycache__/

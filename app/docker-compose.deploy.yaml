@@ -1,0 +1,25 @@
+services:
+  web:
+    image: khantminn/car-price-prediction:${tag}
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8050
+      DEBUG: "false"
+      DEMO_MODE: "false"
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=web
+      - traefik.http.routers.web-st127634.rule=Host(`web-st127634.ml.brain.cs.ait.ac.th`)
+      - traefik.http.routers.web-st127634.entrypoints=websecure
+      - traefik.http.routers.web-st127634.tls=true
+      - traefik.http.routers.web-st127634.tls.certresolver=letsencrypt
+      - traefik.http.services.web-st127634.loadbalancer.server.port=8050
+    networks:
+      - default
+      - web
+
+networks:
+  default:
+  web:
+    external: true

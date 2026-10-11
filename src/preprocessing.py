@@ -1,4 +1,6 @@
-"""Cleaning and feature-encoding utilities for the car price dataset."""
+"""Cleaning, feature-encoding and scaling utilities for the car price dataset."""
+
+from itertools import combinations_with_replacement
 
 import numpy as np
 import pandas as pd
@@ -116,3 +118,63 @@ def encode_for_model(
     if feature_columns is None:
         return out
     return out.reindex(columns=feature_columns, fill_value=0)
+
+
+# Every column that holds a number rather than a 0/1 category flag
+NUMERIC_COLS = ["year", "km_driven", "owner", "mileage", "engine", "max_power", "seats"]
+
+
+def add_polynomial_features(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """Add every degree-2 term of `cols`: each column squared (`year^2`) and
+    each pair multiplied together (`year*engine`).
+    """
+    new_cols = {}
+    # Every pair of columns, including a column paired with itself
+    for a, b in combinations_with_replacement(cols, 2):
+        name = f"{a}^2" if a == b else f"{a}*{b}"
+        new_cols[name] = df[a] * df[b]
+    # Add all new columns at once, after the existing ones
+    return pd.concat([df, pd.DataFrame(new_cols, index=df.index)], axis=1)
+
+
+def _column_stats(df: pd.DataFrame, cols: list[str]) -> dict:
+    """Mean and standard deviation of each column."""
+    # A column with one constant value has std 0; use 1 so we never divide by zero
+    return {col: (float(df[col].mean()), float(df[col].std(ddof=0)) or 1.0) for col in cols}
+
+
+def _scale(df: pd.DataFrame, stats: dict) -> pd.DataFrame:
+    """Turn each column in `stats` into (value - mean) / std."""
+    out = df.copy()
+    for col, (mean, std) in stats.items():
+        out[col] = (out[col] - mean) / std
+    return out
+
+
+def fit_scaler(df: pd.DataFrame, polynomial: bool = False) -> dict:
+    """Learn the mean and standard deviation of each numeric column, and of the
+    degree-2 columns too when `polynomial` is True. 0/1 columns are not scaled.
+    """
+    # Should be called on training data only, so test data stays unseen
+    numeric = _column_stats(df, NUMERIC_COLS)
+    poly = {}
+    if polynomial:
+        # Square the scaled values, not the raw ones: raw year and year^2 move
+        # almost exactly together, so the model could not tell them apart
+        expanded = add_polynomial_features(_scale(df, numeric), NUMERIC_COLS)
+        new_cols = [c for c in expanded.columns if c not in df.columns]
+        # The new columns get their own mean and std so they are on the same scale
+        poly = _column_stats(expanded, new_cols)
+    return {"polynomial": polynomial, "numeric": numeric, "poly": poly}
+
+
+def apply_scaler(df: pd.DataFrame, stats: dict) -> pd.DataFrame:
+    """Scale an encoded dataframe with stats from `fit_scaler`, adding the
+    degree-2 columns first if the stats were fit with `polynomial=True`.
+    """
+    out = _scale(df, stats["numeric"])
+    if stats["polynomial"]:
+        # Same steps, same order as in fit_scaler
+        out = add_polynomial_features(out, NUMERIC_COLS)
+        out = _scale(out, stats["poly"])
+    return out
