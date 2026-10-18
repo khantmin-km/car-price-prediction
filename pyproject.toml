@@ -20,6 +20,9 @@ dev = [
     "matplotlib>=3.8",
     "seaborn>=0.13",
 ]
+test = [
+    "pytest>=9.1.1",
+]
 
 [build-system]
 requires = ["hatchling"]
